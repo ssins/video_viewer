@@ -1,0 +1,20 @@
+version: "2.1"
+services:
+  file_nginx:
+    image: nginx
+    restart: always
+    hostname: file_nginx
+    ports:
+      - 7070:7070
+    volumes:
+      - ./conf/:/etc/nginx/conf.d/
+      - ./files/:/home/files/
+  file_server:
+    image: file_server
+    restart: always
+    hostname: file_server
+    ports:
+      - 7878:3333
+    volumes: 
+      - ./config.py:/usr/src/app/config.py
+      - ./files/:/usr/src/app/files/
