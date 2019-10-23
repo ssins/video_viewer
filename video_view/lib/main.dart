@@ -30,7 +30,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Map<String, VideoPlayerController> vpControllerMap;
+  Map<String, VideoPlayerController> vpControllerMap = Map();
   String vpcNowKey;
   ChewieController chewieController;
   Future future;
@@ -74,8 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    vpControllerMap['init'] =
-        VideoPlayerController.network('http://localhost:2333/test.mp4');
+    vpControllerMap.putIfAbsent('init',()=>VideoPlayerController.network('http://localhost:2333/test.mp4'));
     vpcNowKey = 'init';
     chewieController = ChewieController(
       videoPlayerController: vpControllerMap[vpcNowKey],
@@ -186,7 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       String url = 'http://' +ip + ':' +nginxPort + vpcNowKey;
                       if(!vpControllerMap.containsKey(vpcNowKey)){
                         VideoPlayerController vpController = VideoPlayerController.network(url);
-                        vpControllerMap[vpcNowKey] = vpController;
+                        vpControllerMap.putIfAbsent(vpcNowKey,()=>vpController);
                       }
                       chewieController = ChewieController(
                         videoPlayerController: vpControllerMap[vpcNowKey],
