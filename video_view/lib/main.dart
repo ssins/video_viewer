@@ -5,6 +5,7 @@ import 'package:video_player/video_player.dart';
 import 'package:dio/dio.dart';
 import 'entity.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wakelock/wakelock.dart';
 
 void main() => runApp(MyApp());
 
@@ -80,6 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
       videoPlayerController: vpControllerMap[vpcNowKey],
       autoPlay: true,
     );
+    Wakelock.enable();
     _loadConfig().then((map) {
       ip = map['ip'];
       nginxPort = map['nginxPort'];
@@ -162,6 +164,7 @@ class _MyHomePageState extends State<MyHomePage> {
     vpControllerMap.forEach((k, v) {
       v.dispose();
     });
+    Wakelock.disable();
     super.dispose();
   }
 
