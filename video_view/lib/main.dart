@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:chewie/chewie.dart';
+import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:dio/dio.dart';
 import 'entity.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wakelock/wakelock.dart';
 
 void main() => runApp(MyApp());
 
@@ -70,18 +70,25 @@ class _MyHomePageState extends State<MyHomePage> {
     chewieController = ChewieController(
       videoPlayerController: vpControllerMap[vpcNowKey],
       autoPlay: true,
+      systemOverlaysAfterFullScreen: [SystemUiOverlay.bottom],
+      allowedScreenSleep: false,
     );
   }
 
   @override
   void initState() {
-    vpControllerMap.putIfAbsent('init',()=>VideoPlayerController.network('http://localhost:2333/test.mp4'));
+    // vpControllerMap.putIfAbsent('init',
+    //     () => VideoPlayerController.network('http://localhost:2333/test.mp4'));
     vpcNowKey = 'init';
+    vpControllerMap[vpcNowKey] =
+        VideoPlayerController.network('http://localhost:2333/test.mp4');
     chewieController = ChewieController(
       videoPlayerController: vpControllerMap[vpcNowKey],
       autoPlay: true,
+      systemOverlaysAfterFullScreen: [SystemUiOverlay.bottom],
+      allowedScreenSleep: false,
     );
-    Wakelock.enable();
+    // Wakelock.enable();
     _loadConfig().then((map) {
       ip = map['ip'];
       nginxPort = map['nginxPort'];
@@ -101,7 +108,13 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             children: <Widget>[
               Chewie(
-                controller: chewieController,
+                controller: chewieController ??
+                    ChewieController(
+                      videoPlayerController: vpControllerMap['init'],
+                      autoPlay: true,
+                      systemOverlaysAfterFullScreen: [SystemUiOverlay.bottom],
+                      allowedScreenSleep: false,
+                    ),
               ),
               Container(
                 padding: EdgeInsets.all(5.0),
@@ -164,7 +177,7 @@ class _MyHomePageState extends State<MyHomePage> {
     vpControllerMap.forEach((k, v) {
       v.dispose();
     });
-    Wakelock.disable();
+    // Wakelock.disable();
     super.dispose();
   }
 
@@ -178,21 +191,36 @@ class _MyHomePageState extends State<MyHomePage> {
             itemBuilder: (context, index) {
               Item item = data.items[index];
               return FlatButton(
-                child: Text('${item.name}'),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text('${item.name}'),
+                      flex: 1,
+                    ),
+                    Icon(
+                      item.type == 'dir' ? Icons.folder : Icons.play_arrow,
+                      color: Colors.blueGrey,
+                    )
+                  ],
+                ),
                 onPressed: () {
                   if (item.type == 'file') {
                     setState(() {
                       chewieController.dispose();
                       vpControllerMap[vpcNowKey].pause();
-                      vpcNowKey =data.path + item.name;
-                      String url = 'http://' +ip + ':' +nginxPort + vpcNowKey;
-                      if(!vpControllerMap.containsKey(vpcNowKey)){
-                        VideoPlayerController vpController = VideoPlayerController.network(url);
-                        vpControllerMap.putIfAbsent(vpcNowKey,()=>vpController);
+                      vpcNowKey = data.path + item.name;
+                      String url = 'http://' + ip + ':' + nginxPort + vpcNowKey;
+                      if (!vpControllerMap.containsKey(vpcNowKey)) {
+                        VideoPlayerController vpController =
+                            VideoPlayerController.network(url);
+                        vpControllerMap.putIfAbsent(
+                            vpcNowKey, () => vpController);
                       }
                       chewieController = ChewieController(
                         videoPlayerController: vpControllerMap[vpcNowKey],
                         autoPlay: true,
+                        systemOverlaysAfterFullScreen: [SystemUiOverlay.bottom],
+                        allowedScreenSleep: false,
                       );
                     });
                   } else if (item.type == 'dir') {
